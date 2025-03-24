@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -78,10 +79,19 @@ func (httpServer HTTPServer) Start() error {
 	mux.HandleFunc("/alerts", func(w http.ResponseWriter, req *http.Request) {
 		level.Debug(*httpServer.logger).Log("msg", "Handling /alerts webhook request")
 
+		body, err := ioutil.ReadAll(req.Body)
+ 		if err != nil {
+			httpServer.errorHandler(w, http.StatusInternalServerError, err, nil)
+ 			return 
+		}
+
+		level.Debug(*httpServer.logger).Log("Request Body: %s", body)
+
 		defer req.Body.Close()
 
 		data := types.AlertsData{}
-		err := json.NewDecoder(req.Body).Decode(&data)
+		err = json.Unmarshal([]byte(body), &data)
+		//err = json.NewDecoder(req.Body).Decode(&data)
 		if err != nil {
 			httpServer.errorHandler(w, http.StatusUnprocessableEntity, err, &data)
 			return

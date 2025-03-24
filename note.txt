@@ -1,0 +1,5 @@
+#build go
+GOOS=linux GOARCH="amd64" go build -o snmp_notifier
+
+#build docker
+docker build -t weerawit/snmp-notifier:1.1 .
